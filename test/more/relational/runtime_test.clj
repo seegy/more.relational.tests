@@ -16,11 +16,13 @@
 (def xrel-sal (map #(zipmap [:emp_no :salary :from_date :to_date] %) salaries-data))
 
 
-(println "\n\nCreating relations")
+(println "\n\nCreating relations 10.000 tuple")
 (time (def hashRel-employees (more.relational.hashRel/rel xrel)))
 (time (def bat-employees (more.relational.bat/convertToBats xrel)))
 (time (def tr-employees (more.relational.transrelational/tr xrel)))
 
+
+(println "\n\nCreating relations 100.000 tuple")
 (time (def hashRel-salaries (more.relational.hashRel/rel xrel-sal)))
 (time (def bat-salaries (more.relational.bat/convertToBats xrel-sal)))
 (time (def tr-salaries (more.relational.transrelational/tr xrel-sal)))
