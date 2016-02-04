@@ -4,7 +4,8 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [more.relational "0.1.0-SNAPSHOT"]]
+                 [more.relational "0.1.0-SNAPSHOT"]
+                 [criterium "0.4.3"]]
   :main ^:skip-aot more.relational.tests
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
