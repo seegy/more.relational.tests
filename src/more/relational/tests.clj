@@ -1,4 +1,5 @@
 (ns more.relational.tests
+  (:require [more.relational.runtime])
   (:gen-class))
 
 (defn -main
@@ -6,4 +7,4 @@
   [& args]
   (let [quick? (if (contains? (set args) "-q") true false)
         verbose? (if (contains? (set args) "-v") true false)]
-    (println "quick?=" quick?)))
+    (more.relational.runtime/do-criterium-testing verbose? quick?)))
