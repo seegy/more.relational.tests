@@ -13,13 +13,13 @@
 
 (defn do-creating-tests
   []
-  {:hashrel (reduce (fn[m counter] (assoc m counter (first (:sample-mean (criterium.core/quick-benchmark (more.relational.hashRel/rel (take counter xrel)) {:verbose true})))))
-            {} creating-tuple-counter)
+;  {:hashrel (reduce (fn[m counter] (assoc m counter (first (:sample-mean (criterium.core/quick-benchmark (more.relational.hashRel/rel (take counter xrel)) {:verbose true})))))
+;            {} creating-tuple-counter)
 ;   :batrel (reduce (fn[m counter] (assoc m counter (criterium.core/quick-benchmark (more.relational.bat/convertToBats (take counter xrel)) {:verbose true})))
 ;            {} creating-tuple-counter)
 ;   :transrel (reduce (fn[m counter] (assoc m counter (criterium.core/quick-benchmark (more.relational.transrelational/tr (take counter xrel)) {:verbose true})))
-;            {} creating-tuple-counter)
-   })
+;            {} creating-tuple-counter)}
+  )
 
 
 
@@ -32,5 +32,5 @@
 
 (def something (do-criterium-testing true true))
 
-(use '(incanter core charts))
+;(use '(incanter core charts))
 

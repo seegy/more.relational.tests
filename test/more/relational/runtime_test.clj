@@ -39,7 +39,7 @@
        ))
 
 
-(time (more.relational.transrelational/restriction tr-employees (more.relational.transrelational/restrict-fn [t] (= (:emp_no t) 485652))))
+(time (more.relational.transrelational/restriction tr-employees (more.relational.transrelational/tr-fn [t] (= (:emp_no t) 485652))))
 
 
 
@@ -55,7 +55,7 @@
         ))
 
 
-(time (more.relational.transrelational/restriction tr-employees (more.relational.transrelational/restrict-fn [t] (= (:gender t) "F"))))
+(time (more.relational.transrelational/restriction tr-employees (more.relational.transrelational/tr-fn [t] (= (:gender t) "F"))))
 
 
 
@@ -69,7 +69,7 @@
         ))
 
 
-  (time (more.relational.transrelational/restriction tr-employees (more.relational.transrelational/restrict-fn [t] (and (= (:gender t) "F" ) (= "1952-11-09" (:birth_date t))))))
+  (time (more.relational.transrelational/restriction tr-employees (more.relational.transrelational/tr-fn [t] (and (= (:gender t) "F" ) (= "1952-11-09" (:birth_date t))))))
 
 
 
@@ -89,7 +89,7 @@
               (more.relational.bat/join (more.relational.bat/mirror all)  (:emp_no bat-employees) =)))
 
 
-(time (more.relational.transrelational/restriction tr-employees (more.relational.transrelational/restrict-fn [t] (and (and (= (:gender t) "M" )
+(time (more.relational.transrelational/restriction tr-employees (more.relational.transrelational/tr-fn [t] (and (and (= (:gender t) "M" )
                                                               (= "1952-11-09" (:birth_date t)))
                                                          (or (= (:first_name t) "Genta")
                                                               (> (:emp_no t) 35000))))))
