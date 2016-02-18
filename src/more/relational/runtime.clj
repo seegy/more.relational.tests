@@ -8,7 +8,7 @@
 (def employees-data (set (read-string  (str "[" (slurp  "resources/employees.clj" ) "]" ))))
 (def xrel-emp (sort-by :emp_no (map #(zipmap [:emp_no :birth_date :first_name :last_name :gender :hire_date] %) employees-data)))
 
-(def salaries-data (take 100000  (set (read-string  (str "[" (slurp  "resources/salaries.clj" ) "]" )))))
+(def salaries-data (set (read-string  (str "[" (slurp  "resources/salaries.clj" ) "]" ))))
 (def xrel-sal (sort-by :emp_no (map #(zipmap [:emp_no :salary :from_date :to_date] %) salaries-data)))
 
 (def employees-max-count (count employees-data))
@@ -23,10 +23,10 @@
         xrel-emp (take employee-count xrel-emp)
         xrel-sal (take-while #(<= (:emp_no %) (:emp_no (last xrel-emp))) xrel-sal)
         emp-relvar (hashrel/relvar (hashrel/rel xrel-emp) employee-constraints)
-        sal-relvar (hashrel/relvar (hashrel/rel xrel-sal) (conj salaries-constraints {:foreign-key {:key :emp_no, :referenced-relvar emp-relvar, :referenced-key :emp_no}}))]
-    (println "ready")))
+        sal-relvar (time (hashrel/relvar (time (hashrel/rel xrel-sal)) (conj salaries-constraints {:foreign-key {:key :emp_no, :referenced-relvar emp-relvar, :referenced-key :emp_no}})))]
+    (println "ready" (count xrel-sal))))
 
-(hashrel-employee-test employees-max-count)
+(hashrel-employee-test 10000)
 
 
 #_(defn do-creating-tests
@@ -42,13 +42,13 @@
 
 
 
-(defn do-criterium-testing
+#_(defn do-criterium-testing
   [verbose? quick?]
   (let [create-results (do-creating-tests)]
   create-results))
 
 
-(def something (do-criterium-testing true true))
+#_(def something (do-criterium-testing true true))
 
 
 ;(use '(incanter core charts))
