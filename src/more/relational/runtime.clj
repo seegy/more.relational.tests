@@ -171,6 +171,6 @@
   [employee-count]
   (println "hashrel - employee")
   (let [database (create-hashrel-employee-database employee-count)]
-    ;(hashrel-employee-operation-tests database)
-    (hashrel-employee-manipulation database)))
+    (hashrel-employee-operation-tests database)
+    ;(hashrel-employee-manipulation database)))
 
