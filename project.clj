@@ -9,4 +9,5 @@
                  [incanter "1.5.7"]]
   :main ^:skip-aot more.relational.tests
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}}
+  :jvm-opts ["-Xmx8g"])
