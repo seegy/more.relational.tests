@@ -2,7 +2,7 @@
   (:require [more.relational.bat :as batrel])
   (:use criterium.core))
 
-
+#_(
 (defn load-raw-data
   []
   (let [employees-data (read-string (slurp  "resources/employees.clj-dump" ))
@@ -158,7 +158,7 @@
        department_employee @(:department_employee database)
        department @(:department database)
 
-       xrel-emp (batrel/maketable! (:employee database))
+       xrel-emp (batrel/makeTable! (:employee database))
        first-tupel (first xrel-emp)
        middle-tupel (nth (seq xrel-emp) (long (/  (count employee) 2)))
        last-tupel (last xrel-emp)
@@ -316,4 +316,4 @@
   (println "\nbat - employee - manipulation")
   (employee-manipulation (create-employee-database employee-count)))
 
-
+)

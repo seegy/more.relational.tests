@@ -6,7 +6,7 @@
             [more.relational.hashRel]))
 
 
-
+#_(
 
 (def employees-data (take 10000 (set (read-string  (str "[" (slurp  "resources/employees.clj" ) "]" )))))
 (def xrel (map #(zipmap [:emp_no :birth_date :first_name :last_name :gender :hire_date] %) employees-data))
@@ -138,3 +138,8 @@
 (count (time (let [join-table (more.relational.bat/join (:emp_no bat-employees) (more.relational.bat/reverse (:emp_no bat-salaries)) = )] join-table)))
 
 (count (time (more.relational.transrelational/join tr-employees tr-salaries)))
+
+
+
+
+    )

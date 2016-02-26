@@ -1,6 +1,7 @@
 (ns more.relational.tests
   (:require [more.relational.runtimehashrel]
-            [more.relational.runtimetr])
+            [more.relational.runtimetr]
+            [more.relational.runtimebat])
   (:gen-class))
 
 (defn -main
@@ -51,4 +52,4 @@
 
 
 
-;(-main "tr" "employee" "-c"  "1000000")
+;(-main "tr" "employee" "all" "-c"  "1000000")

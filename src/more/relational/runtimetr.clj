@@ -206,7 +206,6 @@
     (criterium.core/quick-bench  (trel/restriction salaries (trel/tr-fn [t](>= (:salary t) (:salary middle-tupel-sal)))) )
     ))
 
-;(criterium.core/bench (str "foo" "bar" "baz"))
 
 
 (defn employee-join-tests
