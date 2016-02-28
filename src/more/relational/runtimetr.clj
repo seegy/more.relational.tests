@@ -189,46 +189,50 @@
        middle-tupel-sal (nth (seq salaries) (long (/  (count salaries) 2)))]
 
     (println "\npointsearch-key-bm-1: ")
-    (criterium.core/quick-bench  (trel/restriction employee (trel/tr-fn [t] (= (:emp_no t) (:emp_no first-tupel))) ))
+    (println (:sample-mean (my-quickbenchmark (trel/restriction employee (trel/tr-fn [t] (= (:emp_no t) (:emp_no first-tupel))) ) 30)))
 
     (println "\npointsearch-key-bm-2: ")
-    (criterium.core/quick-bench (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) (:emp_no middle-tupel))) ))
+    (println (:sample-mean (my-quickbenchmark  (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) (:emp_no middle-tupel))) )30)))
 
     (println "\npointsearch-key-bm-3: ")
-    (criterium.core/quick-bench (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) (:emp_no last-tupel))) ))
+    (println (:sample-mean (my-quickbenchmark  (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) (:emp_no last-tupel))) )30)))
 
     (println "\npointsearch-key-bm-3: ")
-    (criterium.core/quick-bench (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) 1499999)) ))
+    (println (:sample-mean (my-quickbenchmark  (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) 1499999)) )30)))
 
 
     (println "\npointsearch-no-key-bm-1: ")
-    (criterium.core/quick-bench (trel/restriction employee (trel/tr-fn [t](and (= (:birth_date t) (:birth_date first-tupel)) (= (:last_name t) (:last_name first-tupel)) (= (:first_name  t) (:first_name first-tupel))))))
+    (println (:sample-mean (my-quickbenchmark  (trel/restriction employee (trel/tr-fn [t](and (= (:birth_date t) (:birth_date first-tupel)) (= (:last_name t) (:last_name first-tupel)) (= (:first_name  t) (:first_name first-tupel)))))30)))
 
     (println "\npointsearch-no-key-bm-2: " )
-    (criterium.core/quick-bench (trel/restriction employee (trel/tr-fn [t](and (= (:gender t) (:gender middle-tupel)) (= (:last_name t) (:last_name middle-tupel))(= (:first_name  t) (:first_name  middle-tupel))))))
+    (println (:sample-mean (my-quickbenchmark (trel/restriction employee (trel/tr-fn [t](and (= (:gender t) (:gender middle-tupel)) (= (:last_name t) (:last_name middle-tupel))(= (:first_name  t) (:first_name  middle-tupel)))))30)))
 
     (println "\npointsearch-no-key-bm-3: " )
-    (criterium.core/quick-bench (trel/restriction employee (trel/tr-fn [t](and (= (:birth_date t) (:birth_date last-tupel)) (= (:last_name t) (:last_name last-tupel))(= (:first_name  t) (:first_name  last-tupel))))) )
+    (println (:sample-mean (my-quickbenchmark (trel/restriction employee (trel/tr-fn [t](and (= (:birth_date t) (:birth_date last-tupel)) (= (:last_name t) (:last_name last-tupel))(= (:first_name  t) (:first_name  last-tupel))))) 30)))
 
     (println "\npointsearch-no-key-bm-3: " )
-    (criterium.core/quick-bench (trel/restriction employee (trel/tr-fn [t] (and (= (:birth_date t) "XXXXXXX") (= (:last_name t) "YYYYYYYY")(= (:first_name  t) "ZZZZZZ"))) ))
+    (println (:sample-mean (my-quickbenchmark  (trel/restriction employee (trel/tr-fn [t] (and (= (:birth_date t) "XXXXXXX") (= (:last_name t) "YYYYYYYY")(= (:first_name  t) "ZZZZZZ"))) )30)))
 
 
     (println "\nareasearch-bm-1: " )
-    (criterium.core/quick-bench  (trel/restriction employee (trel/tr-fn [t](> (:emp_no t) (:emp_no first-tupel))) ) )
+    (println (:sample-mean (my-quickbenchmark   (trel/restriction employee (trel/tr-fn [t](> (:emp_no t) (:emp_no first-tupel))) ) 30)))
 
     (println "\nareasearch-bm-2: " )
-    (criterium.core/quick-bench  (trel/restriction employee (trel/tr-fn [t](< (:emp_no t) (:emp_no last-tupel)))))
+    (println (:sample-mean (my-quickbenchmark   (trel/restriction employee (trel/tr-fn [t](< (:emp_no t) (:emp_no last-tupel))))30)))
 
     (println "\nareasearch-bm-3: " )
-    (criterium.core/quick-bench  (trel/restriction employee (trel/tr-fn [t](= (:gender t) "F"))) )
+    (println (:sample-mean (my-quickbenchmark   (trel/restriction employee (trel/tr-fn [t](= (:gender t) "F"))) 30)))
 
     (println "\nareasearch-bm-4: " )
-    (criterium.core/quick-bench  (trel/restriction employee (trel/tr-fn [t](not (= (:gender t) "F")))) )
+    (println (:sample-mean (my-quickbenchmark   (trel/restriction employee (trel/tr-fn [t](not (= (:gender t) "F"))))30)))
 
     (println "\nareasearch-bm-5: " )
-    (criterium.core/quick-bench  (trel/restriction salaries (trel/tr-fn [t](>= (:salary t) (:salary middle-tupel-sal)))) )
+    (println (:sample-mean (my-quickbenchmark  (trel/restriction salaries (trel/tr-fn [t](>= (:salary t) (:salary middle-tupel-sal)))) 30)))
     ))
+
+
+
+
 
 (defn employee-operation-tests-with-result-set
   [database]
@@ -247,45 +251,45 @@
        middle-tupel-sal (nth (seq salaries) (long (/  (count salaries) 2)))]
 
     (println "\npointsearch-key-bm-1: ")
-    (criterium.core/quick-bench  (seq (trel/restriction employee (trel/tr-fn [t] (= (:emp_no t) (:emp_no first-tupel))) )))
+    (println (:sample-mean (my-quickbenchmark    (seq (trel/restriction employee (trel/tr-fn [t] (= (:emp_no t) (:emp_no first-tupel))) ))30)))
 
     (println "\npointsearch-key-bm-2: ")
-    (criterium.core/quick-bench (seq (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) (:emp_no middle-tupel))) )))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) (:emp_no middle-tupel))) ))30)))
 
     (println "\npointsearch-key-bm-3: ")
-    (criterium.core/quick-bench (seq (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) (:emp_no last-tupel))) )))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) (:emp_no last-tupel))) ))30)))
 
     (println "\npointsearch-key-bm-3: ")
-    (criterium.core/quick-bench (seq (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) 1499999)) )))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction employee (trel/tr-fn [t](= (:emp_no t) 1499999)) ))30)))
 
 
     (println "\npointsearch-no-key-bm-1: ")
-    (criterium.core/quick-bench (seq (trel/restriction employee (trel/tr-fn [t](and (= (:birth_date t) (:birth_date first-tupel)) (= (:last_name t) (:last_name first-tupel)) (= (:first_name  t) (:first_name first-tupel)))))))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction employee (trel/tr-fn [t](and (= (:birth_date t) (:birth_date first-tupel)) (= (:last_name t) (:last_name first-tupel)) (= (:first_name  t) (:first_name first-tupel))))))30)))
 
     (println "\npointsearch-no-key-bm-2: " )
-    (criterium.core/quick-bench (seq (trel/restriction employee (trel/tr-fn [t](and (= (:gender t) (:gender middle-tupel)) (= (:last_name t) (:last_name middle-tupel))(= (:first_name  t) (:first_name  middle-tupel)))))))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction employee (trel/tr-fn [t](and (= (:gender t) (:gender middle-tupel)) (= (:last_name t) (:last_name middle-tupel))(= (:first_name  t) (:first_name  middle-tupel))))))30)))
 
     (println "\npointsearch-no-key-bm-3: " )
-    (criterium.core/quick-bench (seq (trel/restriction employee (trel/tr-fn [t](and (= (:birth_date t) (:birth_date last-tupel)) (= (:last_name t) (:last_name last-tupel))(= (:first_name  t) (:first_name  last-tupel))))) ))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction employee (trel/tr-fn [t](and (= (:birth_date t) (:birth_date last-tupel)) (= (:last_name t) (:last_name last-tupel))(= (:first_name  t) (:first_name  last-tupel))))) )30)))
 
     (println "\npointsearch-no-key-bm-3: " )
-    (criterium.core/quick-bench (seq (trel/restriction employee (trel/tr-fn [t] (and (= (:birth_date t) "XXXXXXX") (= (:last_name t) "YYYYYYYY")(= (:first_name  t) "ZZZZZZ"))) )))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction employee (trel/tr-fn [t] (and (= (:birth_date t) "XXXXXXX") (= (:last_name t) "YYYYYYYY")(= (:first_name  t) "ZZZZZZ"))) ))30)))
 
 
     (println "\nareasearch-bm-1: " )
-    (criterium.core/quick-bench  (seq (trel/restriction employee (trel/tr-fn [t](> (:emp_no t) (:emp_no first-tupel))) ) ))
+    (println (:sample-mean (my-quickbenchmark    (seq (trel/restriction employee (trel/tr-fn [t](> (:emp_no t) (:emp_no first-tupel))) ) )30)))
 
     (println "\nareasearch-bm-2: " )
-    (criterium.core/quick-bench  (seq (trel/restriction employee (trel/tr-fn [t](< (:emp_no t) (:emp_no last-tupel))))))
+    (println (:sample-mean (my-quickbenchmark    (seq (trel/restriction employee (trel/tr-fn [t](< (:emp_no t) (:emp_no last-tupel)))))30)))
 
     (println "\nareasearch-bm-3: " )
-    (criterium.core/quick-bench  (seq (trel/restriction employee (trel/tr-fn [t](= (:gender t) "F"))) ))
+    (println (:sample-mean (my-quickbenchmark    (seq (trel/restriction employee (trel/tr-fn [t](= (:gender t) "F"))) )30)))
 
     (println "\nareasearch-bm-4: " )
-    (criterium.core/quick-bench  (seq (trel/restriction employee (trel/tr-fn [t](not (= (:gender t) "F")))) ))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction employee (trel/tr-fn [t](not (= (:gender t) "F")))) )30)))
 
     (println "\nareasearch-bm-5: " )
-    (criterium.core/quick-bench  (seq (trel/restriction salaries (trel/tr-fn [t](>= (:salary t) (:salary middle-tupel-sal)))) ))
+    (println (:sample-mean (my-quickbenchmark   (seq (trel/restriction salaries (trel/tr-fn [t](>= (:salary t) (:salary middle-tupel-sal)))) )30)))
     ))
 
 
@@ -359,12 +363,12 @@
   [database]
   (let [first-employee (first @(:employee database))
         insert-bm-1 (my-quickbenchmark  (trel/insert! (:employee database) {:emp_no (randomID), :birth_date "1958-02-19", :first_name "Saniya", :last_name "Kalloufi", :gender "M", :hire_date "1994-09-15"}) 6)
-        insert-bm-2 (my-quickbenchmark  (trel/insert! (:titles database) {:emp_no (:emp_no first-employee), :title (randomID), :from_date "YYYYYYY"}) 6)
-        insert-bm-3 (my-quickbenchmark  (trel/insert! (:salaries database) {:emp_no (:emp_no first-employee), :salary 10000000, :from_date (randomID), :to_date "1998-02-08"}) 6)
-        insert-bm-4 (my-quickbenchmark  (trel/insert! (:department_employee database) {:emp_no (:emp_no first-employee), :dept_no "d008" :from_date (randomID)}) 6)
+        insert-bm-2 (my-quickbenchmark  (trel/insert! (:titles database) {:emp_no (:emp_no first-employee), :title (str (randomID)), :from_date "YYYYYYY"}) 6)
+        insert-bm-3 (my-quickbenchmark  (trel/insert! (:salaries database) {:emp_no (:emp_no first-employee), :salary 10000000, :from_date (str (randomID)), :to_date "1998-02-08"}) 6)
+        insert-bm-4 (my-quickbenchmark  (trel/insert! (:department_employee database) {:emp_no (:emp_no first-employee), :dept_no "d008" :from_date (str (randomID))}) 6)
 
 
-        delete-bm-1 (my-quickbenchmark (trel/delete! (:salaries database) (trel/tr-fn [t](> (:salary t) 53383))) 1)
+
         delete-bm-2 (my-quickbenchmark (trel/delete! (:titles database) (trel/tr-fn [t](> (:emp_no t) (:emp_no first-employee)))) 1)
         delete-bm-3 (my-quickbenchmark (trel/delete! (:titles database) (trel/tr-fn [t](= (:title t) "Senior Staff"))) 1)
         delete-bm-4 (my-quickbenchmark (trel/delete! (:department_employee database) (trel/tr-fn [t] true)) 1)
@@ -372,6 +376,7 @@
 
         update-bm-1 (my-quickbenchmark (trel/update! (:employee database) (trel/tr-fn [t] (= (:gender t) "F")) :gender "M") 1)
         update-bm-2 (my-quickbenchmark (trel/update! (:salaries database) (trel/tr-fn [t](= (:emp_no t) (:emp_no first-employee))) :salary 1) 1)
+                delete-bm-1 (my-quickbenchmark (trel/delete! (:salaries database) (trel/tr-fn [t](> (:salary t) 53383))) 1)
         update-bm-3 (my-quickbenchmark (trel/update! (:department database) (trel/tr-fn [t](= (:dept_no t) "d008")) :dept_name "" ) 1)
         update-bm-4 (my-quickbenchmark (trel/update! (:employee database) (trel/tr-fn [t](= (:emp_no t) (:emp_no first-employee))) :first_name "XXXXXXXX") 1)
 
@@ -393,6 +398,7 @@
     (println "\nupdate-bm-3: " (:sample-mean update-bm-3))
     (println "\nupdate-bm-4: " (:sample-mean update-bm-4))
     ))
+
 
 
 
