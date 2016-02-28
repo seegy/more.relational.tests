@@ -20,11 +20,22 @@
    :xrel-dept_manager (sort-by :emp_no  dept_manager-data)}))
 
 
-(defn- empno_filter
-  [emp_no xrel]
-  (vec (take-while #(<= (:emp_no %) emp_no) xrel)))
 
-(defn uuid [] (str (java.util.UUID/randomUUID)))
+(defn- get_emps_by_manager
+  [manxrel empxrel empcount]
+  (let [empno_in_man (into #{} (map #(:emp_no %) manxrel))
+        manager (into #{} (filter #(contains? empno_in_man (:emp_no %)) empxrel))
+        not_manger (clojure.set/difference (set empxrel) manager)
+        ]
+    (apply conj manager (take (- empcount (count manager)) not_manger))))
+
+
+
+(defn- empno_filter
+  [emp_nos xrel]
+   (filterv #(contains? emp_nos (:emp_no %)) xrel))
+
+(defn randomID [] (+ 10000000 (rand-int 100000)))
 
 
 
@@ -58,13 +69,14 @@
   (let [raw-data (load-raw-data)
         employees-max-count (count (:xrel-emp raw-data))
         employee-count (if (> base-count employees-max-count) employees-max-count base-count)
-        xrel-emp (take employee-count (:xrel-emp raw-data))
+        xrel-dept-man (:xrel-dept_manager raw-data)
+        xrel-emp (get_emps_by_manager xrel-dept-man (:xrel-emp raw-data) base-count)
+        emp_nos (into #{} (map #(:emp_no %) xrel-emp))
         emp-relvar (batrel/batvar (batrel/convertToBats [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp)) {:key :emp_no})
         dept-relvar (batrel/batvar (batrel/convertToBats [:dept_no :dept_name] (:xrel-department raw-data)) {:key :dept_no})
-        xrel-sal (empno_filter (:emp_no (last xrel-emp)) (:xrel-sal raw-data))
-        xrel-titles (empno_filter (:emp_no (last xrel-emp)) (:xrel-titles raw-data))
-        xrel-dept-man (empno_filter (:emp_no (last xrel-emp)) (:xrel-dept_manager raw-data))
-        xrel-dept-emp (empno_filter (:emp_no (last xrel-emp)) (:xrel-dept_emp raw-data))
+        xrel-sal (empno_filter emp_nos (:xrel-sal raw-data))
+        xrel-titles (empno_filter emp_nos (:xrel-titles raw-data))
+        xrel-dept-emp (empno_filter emp_nos (:xrel-dept_emp raw-data))
         sal-relvar (batrel/batvar (batrel/convertToBats [:emp_no :salary :from_date :to_date] xrel-sal) #{{:key #{:emp_no, :from_date}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
@@ -107,35 +119,49 @@
   (let [raw-data (load-raw-data)
         employees-max-count (count (:xrel-emp raw-data))
         employee-count (if (> base-count employees-max-count) employees-max-count base-count)
-        xrel-emp (take employee-count (:xrel-emp raw-data))
-        emp-relvar (batrel/batvar (batrel/convertToBats  (take employee-count xrel-emp)) {:key :emp_no})
-        dept-relvar (batrel/batvar (batrel/convertToBats  (:xrel-department raw-data)) {:key :dept_no})
-        xrel-sal (empno_filter (:emp_no (last xrel-emp)) (:xrel-sal raw-data))
-        xrel-titles (empno_filter (:emp_no (last xrel-emp)) (:xrel-titles raw-data))
-        xrel-dept-man (empno_filter (:emp_no (last xrel-emp)) (:xrel-dept_manager raw-data))
-        xrel-dept-emp (empno_filter (:emp_no (last xrel-emp)) (:xrel-dept_emp raw-data))]
+        xrel-dept-man (:xrel-dept_manager raw-data)
+        xrel-emp (get_emps_by_manager xrel-dept-man (:xrel-emp raw-data) base-count)
+        emp_nos (into #{} (map #(:emp_no %) xrel-emp))
+        emp-relvar (batrel/batvar (batrel/convertToBats [:emp_no :birth_date :first_name :last_name :gender :hire_date]  (take employee-count xrel-emp)) {:key :emp_no})
+        dept-relvar (batrel/batvar (batrel/convertToBats [:dept_no :dept_name] (:xrel-department raw-data)) {:key :dept_no})
+        xrel-sal (empno_filter emp_nos (:xrel-sal raw-data))
+        xrel-titles (empno_filter emp_nos (:xrel-titles raw-data))
+        xrel-dept-emp (empno_filter emp_nos (:xrel-dept_emp raw-data))
+        emp_rel (batrel/convertToBats  (take employee-count xrel-emp))
+        dep_rel (batrel/convertToBats  (:xrel-department raw-data))
+        sal_rel (batrel/convertToBats [:emp_no :salary :from_date :to_date] xrel-sal)
+        tit_rel (batrel/convertToBats [:emp_no :title :from_date] xrel-titles)
+        dep_mal_rel (batrel/convertToBats [:dept_no :emp_no :from_date] xrel-dept-man)
+        dep_emp_rel (batrel/convertToBats [:emp_no :dept_no :from_date] xrel-dept-emp)
+        ]
 
     (println "\nSum of tupel in database: " (+ employee-count 9 (count xrel-sal) (count xrel-titles) (count xrel-dept-man) (count xrel-dept-emp)))
     (println "\ncreating employees " employee-count )
-    (criterium.core/quick-bench (batrel/batvar (batrel/convertToBats  (take employee-count xrel-emp)) {:key :emp_no}))
+    (criterium.core/quick-bench  (batrel/convertToBats  (take employee-count xrel-emp)) )
+    (criterium.core/quick-bench (batrel/batvar emp_rel{:key :emp_no}))
 
     (println "\ncreating department "  9 )
-    (criterium.core/quick-bench  (batrel/batvar (batrel/convertToBats  (:xrel-department raw-data)) {:key :dept_no}) )
+
+    (criterium.core/quick-bench  (batrel/convertToBats  (:xrel-department raw-data)) )
+    (criterium.core/quick-bench  (batrel/batvar dep_rel {:key :dept_no}) )
 
     (println "\ncreating salaris with " (count xrel-sal)             " foreign-keys:"  )
-    (criterium.core/quick-bench (batrel/batvar (batrel/convertToBats xrel-sal) #{{:key #{:emp_no, :from_date}}
+    (criterium.core/quick-bench       (batrel/convertToBats [:emp_no :salary :from_date :to_date] xrel-sal))
+    (criterium.core/quick-bench (batrel/batvar sal_rel #{{:key #{:emp_no, :from_date}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
                                                                                                                       :referenced-key :emp_no}}}) )
 
     (println "\ncreating title with " (count xrel-titles)            " foreign-keys:"  )
-    (criterium.core/quick-bench (batrel/batvar (batrel/convertToBats  xrel-titles) #{{:key #{:emp_no, :title, :from_date}}
+    (criterium.core/quick-bench       (batrel/convertToBats [:emp_no :title :from_date] xrel-titles))
+    (criterium.core/quick-bench (batrel/batvar tit_rel #{{:key #{:emp_no, :title, :from_date}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
                                                                                                                       :referenced-key :emp_no}}}) )
 
     (println "\ncreating dept-mananger with " (count xrel-dept-man)  " foreign-keys:"  )
-    (criterium.core/quick-bench (batrel/batvar (batrel/convertToBats  xrel-dept-man) #{{:key #{:emp_no, :dept_no}}
+    (criterium.core/quick-bench      (batrel/convertToBats [:dept_no :emp_no :from_date] xrel-dept-man))
+    (criterium.core/quick-bench (batrel/batvar dep_mal_rel #{{:key #{:emp_no, :dept_no}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
                                                                                                                       :referenced-key :emp_no}}
@@ -144,7 +170,8 @@
                                                                                                                       :referenced-key :dept_no}} }) )
 
     (println "\ncreating dept_employees with " (count xrel-dept-emp)      " foreign-keys:"  )
-    (criterium.core/quick-bench (batrel/batvar (batrel/convertToBats  xrel-dept-emp) #{{:key #{:emp_no, :dept_no, :from_date}}
+    (criterium.core/quick-bench      (batrel/convertToBats [:emp_no :dept_no :from_date] xrel-dept-emp))
+    (criterium.core/quick-bench (batrel/batvar dep_emp_rel #{{:key #{:emp_no, :dept_no, :from_date}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
                                                                                                                       :referenced-key :emp_no}}
@@ -168,7 +195,7 @@
        middle-tupel (nth (seq xrel-emp) (long (/  (count employee) 2)))
        last-tupel (last xrel-emp)
 
-       middle-tupel-sal (nth (seq salaries) (long (/  (count salaries) 2)))]
+       middle-tupel-sal (nth (batrel/makeTable! (:salaries database)) (long (/  (count salaries) 2)))]
 
     (println "\npointsearch-key-bm-1: ")
     (criterium.core/quick-bench  (batrel/select (:emp_no employee) = (:emp_no first-tupel)))
@@ -237,23 +264,23 @@
        middle-tupel (nth (seq xrel-emp) (long (/  (count employee) 2)))
        last-tupel (last xrel-emp)
 
-       middle-tupel-sal (nth (seq salaries) (long (/  (count salaries) 2)))]
+       middle-tupel-sal (nth (batrel/makeTable! (:salaries database)) (long (/  (count salaries) 2)))]
 
     (println "\npointsearch-key-bm-1: ")
     (criterium.core/quick-bench  (let[ result (batrel/select (:emp_no employee) = (:emp_no first-tupel))]
-                                   (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join (batrel/mirror result) (:emp_no employee) =))))))
+                                   (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join (batrel/mirror result) (:emp_no employee) =))))))
 
     (println "\npointsearch-key-bm-2: ")
     (criterium.core/quick-bench (let[result (batrel/select (:emp_no employee) = (:emp_no middle-tupel))]
-                                  (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join (batrel/mirror result) (:emp_no employee) =))))))
+                                  (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join (batrel/mirror result) (:emp_no employee) =))))))
 
     (println "\npointsearch-key-bm-3: ")
     (criterium.core/quick-bench (let[result (batrel/select (:emp_no employee) = (:emp_no last-tupel))]
-                                (batrel/makeTable  [](keys employee) (vec (assoc employee :emp_no (batrel/join (batrel/mirror result) (:emp_no employee) =))))))
+                                (batrel/makeTable  [](keys employee) (vals (assoc employee :emp_no (batrel/join (batrel/mirror result) (:emp_no employee) =))))))
 
     (println "\npointsearch-key-bm-3: ")
     (criterium.core/quick-bench (let[result (batrel/select (:emp_no employee) = 1499999)]
-                                  (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join (batrel/mirror result) (:emp_no employee) =))))))
+                                  (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join (batrel/mirror result) (:emp_no employee) =))))))
 
 
     (println "\npointsearch-no-key-bm-1: ")
@@ -261,14 +288,14 @@
                                       new-last-name (batrel/mirror (batrel/select (:last_name employee) = (:last_name first-tupel)))
                                       new-first-name (batrel/mirror (batrel/select (:first_name employee) = (:first_name first-tupel)))
                                       result (batrel/join (batrel/join new-birth-date new-last-name =) new-first-name =) ]
-                                  (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join result (:emp_no employee) =))))))
+                                  (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join result (:emp_no employee) =))))))
 
     (println "\npointsearch-no-key-bm-2: " )
     (criterium.core/quick-bench (let [new-gender     (batrel/select (:gender employee) = (:gender middle-tupel))
                                       new-last-name  (batrel/select (:last_name employee) = (:last_name middle-tupel))
                                       new-first-name (batrel/select (:first_name employee) = (:first_name middle-tupel))
                                       result (batrel/join (batrel/join new-gender new-last-name =) new-first-name =)]
-                                  (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join result (:emp_no employee) =))))))
+                                  (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join result (:emp_no employee) =))))))
 
 
     (println "\npointsearch-no-key-bm-3: " )
@@ -276,34 +303,34 @@
                                       new-last-name  (batrel/select (:last_name employee) = (:last_name middle-tupel))
                                       new-first-name (batrel/select (:first_name employee) = (:first_name middle-tupel))
                                       result (batrel/join (batrel/join new-birth-date new-last-name =) new-first-name =) ]
-                                  (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join result (:emp_no employee) =))))))
+                                  (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join result (:emp_no employee) =))))))
 
     (println "\npointsearch-no-key-bm-3: " )
     (criterium.core/quick-bench (let[new-birth-date (batrel/select (:birth_date employee) = "XXXXXXX")
                                       new-last-name  (batrel/select (:last_name employee) = "YYYYYYYY")
                                       new-first-name (batrel/select (:first_name employee) = "ZZZZZZ")
                                       result (batrel/join (batrel/join new-birth-date new-last-name =) new-first-name =) ]
-                                  (batrel/makeTable  [](keys employee) (vec (assoc employee :emp_no (batrel/join result (:emp_no employee) =))))))
+                                  (batrel/makeTable  [](keys employee) (vals (assoc employee :emp_no (batrel/join result (:emp_no employee) =))))))
 
     (println "\nareasearch-bm-1: " )
     (criterium.core/quick-bench  (let [new-emp-no (batrel/select (:emp_no employee) > (:emp_no first-tupel))]
-                                   (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join (batrel/mirror new-emp-no) (:emp_no employee) =))))))
+                                   (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join (batrel/mirror new-emp-no) (:emp_no employee) =))))))
 
     (println "\nareasearch-bm-2: " )
     (criterium.core/quick-bench (let [new-emp-no (batrel/select (:emp_no employee) < (:emp_no last-tupel))]
-                                   (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join (batrel/mirror new-emp-no) (:emp_no employee) =))))))
+                                   (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join (batrel/mirror new-emp-no) (:emp_no employee) =))))))
 
     (println "\nareasearch-bm-3: " )
     (criterium.core/quick-bench (let [new-gender (batrel/select (:gender employee) = "F")]
-                                   (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join (batrel/mirror new-gender) (:emp_no employee) =))))))
+                                   (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join (batrel/mirror new-gender) (:emp_no employee) =))))))
 
     (println "\nareasearch-bm-4: " )
     (criterium.core/quick-bench (let [new-gender (batrel/select (:gender employee) not= "F")]
-                                   (batrel/makeTable [] (keys employee) (vec (assoc employee :emp_no (batrel/join (batrel/mirror new-gender) (:emp_no employee) =))))))
+                                   (batrel/makeTable [] (keys employee) (vals (assoc employee :emp_no (batrel/join (batrel/mirror new-gender) (:emp_no employee) =))))))
 
     (println "\nareasearch-bm-5: " )
     (criterium.core/quick-bench (let [new-salary (batrel/select (:salary salaries) >= (:salary middle-tupel-sal))]
-                                   (batrel/makeTable [] (keys salaries) (vec (assoc employee :emp_no (batrel/join (batrel/mirror new-salary) (:emp_no salaries) =))))))
+                                   (batrel/makeTable [] (keys salaries) (vals (assoc employee :emp_no (batrel/join (batrel/mirror new-salary) (:emp_no salaries) =))))))
     ))
 
 
@@ -407,32 +434,32 @@
 
 (defn employee-manipulation
   [database]
-  (let [first-employee (first @(:employee database))
+  (let [first-employee (first (batrel/makeTable! (:employee database)))
          employee @(:employee database)
        salaries @(:salaries database)
        titles @(:titles database)
        department_manager @(:department_manager database)
        department_employee @(:department_employee database)
        department @(:department database)
-        insert-bm-1 (my-quickbenchmark  (batrel/insert! (:employee database) {:emp_no (uuid), :birth_date "1958-02-19", :first_name "Saniya", :last_name "Kalloufi", :gender "M", :hire_date "1994-09-15"}) 6)
-        insert-bm-2 (my-quickbenchmark  (batrel/insert! (:titles database) {:emp_no (:emp_no first-employee), :title (uuid), :from_date "YYYYYYY"}) 6)
-        insert-bm-3 (my-quickbenchmark  (batrel/insert! (:salaries database) {:emp_no (:emp_no first-employee), :salary 10000000, :from_date (uuid), :to_date "1998-02-08"}) 6)
-        insert-bm-4 (my-quickbenchmark  (batrel/insert! (:department_employee database) {:emp_no (:emp_no first-employee), :dept_no "d008" :from_date (uuid)}) 6)
+        insert-bm-1 (my-quickbenchmark  (batrel/insert! (:employee database) {:emp_no (randomID), :birth_date "1958-02-19", :first_name "Saniya", :last_name "Kalloufi", :gender "M", :hire_date "1994-09-15"}) 6)
+        insert-bm-2 (my-quickbenchmark  (batrel/insert! (:titles database) {:emp_no (:emp_no first-employee), :title (str  (randomID)), :from_date "YYYYYYY"}) 6)
+        insert-bm-3 (my-quickbenchmark  (batrel/insert! (:salaries database) {:emp_no (:emp_no first-employee), :salary 10000000, :from_date (str (randomID)), :to_date "1998-02-08"}) 6)
+        insert-bm-4 (my-quickbenchmark  (batrel/insert! (:department_employee database) {:emp_no (:emp_no first-employee), :dept_no "d008" :from_date (str (randomID))}) 6)
 
 
         delete-bm-1 (my-quickbenchmark (let[ result (batrel/select (:salary salaries) > 53383)
-                                             tuples (batrel/makeTable [] (keys salaries) (vec (assoc salaries :emp_no (batrel/join (batrel/mirror result) (:emp_no salaries) =))))]
+                                             tuples (batrel/makeTable [] (keys salaries) (vals (assoc salaries :emp_no (batrel/join (batrel/mirror result) (:emp_no salaries) =))))]
                                    (map #(batrel/delete! salaries %) tuples) )1)
 
         delete-bm-2 (my-quickbenchmark (let[ result (batrel/select (:emp_no titles) > (:emp_no first-employee))
-                                             tuples (batrel/makeTable [] (keys titles) (vec (assoc titles :emp_no (batrel/join (batrel/mirror result) (:emp_no titles) =))))]
+                                             tuples (batrel/makeTable [] (keys titles) (vals (assoc titles :emp_no (batrel/join (batrel/mirror result) (:emp_no titles) =))))]
                                    (map #(batrel/delete! titles %) tuples) )1)
 
         delete-bm-3 (my-quickbenchmark (let[ result (batrel/select (:title titles) = "Senior Staff")
-                                             tuples (batrel/makeTable [] (keys titles) (vec (assoc titles :emp_no (batrel/join (batrel/mirror result) (:emp_no titles) =))))]
+                                             tuples (batrel/makeTable [] (keys titles) (vals (assoc titles :emp_no (batrel/join (batrel/mirror result) (:emp_no titles) =))))]
                                    (map #(batrel/delete! titles %) tuples) )1)
 
-        delete-bm-4 (my-quickbenchmark (let[ tuples (batrel/makeTable! department_employee)]
+        delete-bm-4 (my-quickbenchmark (let[ tuples (batrel/makeTable!  (:department_employee database))]
                                    (map #(batrel/delete! department_employee %) tuples) )1)
 
 
@@ -478,7 +505,9 @@
   (test-create-employee-database employee-count)
   (let [database (create-employee-database employee-count)]
     (employee-operation-tests database)
+    (employee-operation-tests-with-result-set database)
     (employee-join-tests database)
+    (employee-join-tests-with-result-set database)
     (employee-manipulation database)
     ))
 
@@ -491,12 +520,20 @@
 (defn search-test
   [employee-count]
   (println "\nbat - employee - search")
-  (employee-operation-tests (create-employee-database employee-count)))
+  (let[database (create-employee-database employee-count)]
+    (println "\n without resolving to useable data:")
+    (employee-operation-tests database)
+    (println "\n with resolving to useable data:")
+    (employee-operation-tests-with-result-set database)))
 
 (defn join-test
   [employee-count]
   (println "\nbat - employee - join")
-  (employee-join-tests (create-employee-database employee-count)))
+  (let[database (create-employee-database employee-count)]
+    (println "\n without resolving to useable data:")
+    (employee-join-tests database)
+    (println "\n with resolving to useable data:")
+    (employee-join-tests-with-result-set database)))
 
 (defn manipilation-test
   [employee-count]

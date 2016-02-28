@@ -20,12 +20,21 @@
    :xrel-dept_manager (sort-by :emp_no  dept_manager-data)}))
 
 
+(defn- get_emps_by_manager
+  [manxrel empxrel empcount]
+  (let [empno_in_man (into #{} (map #(:emp_no %) manxrel))
+        manager (into #{} (filter #(contains? empno_in_man (:emp_no %)) empxrel))
+        not_manger (clojure.set/difference (set empxrel) manager)
+        ]
+    (apply conj manager (take (- empcount (count manager)) not_manger))))
+
+
+
 (defn- empno_filter
-  [emp_no xrel]
-  (vec (take-while #(<= (:emp_no %) emp_no) xrel)))
+  [emp_nos xrel]
+   (filterv #(contains? emp_nos (:emp_no %)) xrel))
 
-(defn uuid [] (str (java.util.UUID/randomUUID)))
-
+(defn randomID [] (+ 10000000 (rand-int 100000)))
 
 
 (defmacro my-time
@@ -58,13 +67,14 @@
   (let [raw-data (load-raw-data)
         employees-max-count (count (:xrel-emp raw-data))
         employee-count (if (> base-count employees-max-count) employees-max-count base-count)
-        xrel-emp (take employee-count (:xrel-emp raw-data))
+        xrel-dept-man (:xrel-dept_manager raw-data)
+        xrel-emp (get_emps_by_manager xrel-dept-man (:xrel-emp raw-data) base-count)
+        emp_nos (into #{} (map #(:emp_no %) xrel-emp))
         emp-relvar (hashrel/relvar (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp)) {:key :emp_no})
         dept-relvar (hashrel/relvar (hashrel/rel [:dept_no :dept_name] (:xrel-department raw-data)) {:key :dept_no})
-        xrel-sal (empno_filter (:emp_no (last xrel-emp)) (:xrel-sal raw-data))
-        xrel-titles (empno_filter (:emp_no (last xrel-emp)) (:xrel-titles raw-data))
-        xrel-dept-man (empno_filter (:emp_no (last xrel-emp)) (:xrel-dept_manager raw-data))
-        xrel-dept-emp (empno_filter (:emp_no (last xrel-emp)) (:xrel-dept_emp raw-data))
+        xrel-sal (empno_filter emp_nos (:xrel-sal raw-data))
+        xrel-titles (empno_filter emp_nos (:xrel-titles raw-data))
+        xrel-dept-emp (empno_filter emp_nos (:xrel-dept_emp raw-data))
         sal-relvar (hashrel/relvar (hashrel/rel [:emp_no :salary :from_date :to_date] xrel-sal) #{{:key #{:emp_no, :from_date}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
@@ -102,35 +112,48 @@
   (let [raw-data (load-raw-data)
         employees-max-count (count (:xrel-emp raw-data))
         employee-count (if (> base-count employees-max-count) employees-max-count base-count)
-        xrel-emp (take employee-count (:xrel-emp raw-data))
+        xrel-dept-man (:xrel-dept_manager raw-data)
+        xrel-emp (get_emps_by_manager xrel-dept-man (:xrel-emp raw-data) base-count)
+        emp_nos (into #{} (map #(:emp_no %) xrel-emp))
         emp-relvar (hashrel/relvar (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp)) {:key :emp_no})
         dept-relvar (hashrel/relvar (hashrel/rel [:dept_no :dept_name] (:xrel-department raw-data)) {:key :dept_no})
-        xrel-sal (empno_filter (:emp_no (last xrel-emp)) (:xrel-sal raw-data))
-        xrel-titles (empno_filter (:emp_no (last xrel-emp)) (:xrel-titles raw-data))
-        xrel-dept-man (empno_filter (:emp_no (last xrel-emp)) (:xrel-dept_manager raw-data))
-        xrel-dept-emp (empno_filter (:emp_no (last xrel-emp)) (:xrel-dept_emp raw-data))]
+        xrel-sal (empno_filter emp_nos (:xrel-sal raw-data))
+        xrel-titles (empno_filter emp_nos (:xrel-titles raw-data))
+        xrel-dept-emp (empno_filter emp_nos (:xrel-dept_emp raw-data))
+        emp_rel(hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp))
+        dep_rel(hashrel/rel [:dept_no :dept_name] (:xrel-department raw-data))
+        sal_rel(hashrel/rel [:emp_no :salary :from_date :to_date] xrel-sal)
+        tit_rel(hashrel/rel [:emp_no :title :from_date] xrel-titles)
+        dep_man_rel(hashrel/rel [:dept_no :emp_no :from_date] xrel-dept-man)
+        dep_emp_rel(hashrel/rel [:emp_no :dept_no :from_date] xrel-dept-emp)
+        ]
 
     (println "\nSum of tupel in database: " (+ employee-count 9 (count xrel-sal) (count xrel-titles) (count xrel-dept-man) (count xrel-dept-emp)))
     (println "\ncreating employees " employee-count )
-    (criterium.core/quick-bench (hashrel/relvar (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp)) {:key :emp_no}))
+    (criterium.core/quick-bench (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp)))
+    (criterium.core/quick-bench (hashrel/relvar emp_rel {:key :emp_no}))
 
     (println "\ncreating department "  9 )
-    (criterium.core/quick-bench  (hashrel/relvar (hashrel/rel [:dept_no :dept_name] (:xrel-department raw-data)) {:key :dept_no}) )
+    (criterium.core/quick-bench (hashrel/rel [:dept_no :dept_name] (:xrel-department raw-data)))
+    (criterium.core/quick-bench  (hashrel/relvar dep_rel {:key :dept_no}) )
 
     (println "\ncreating salaris with " (count xrel-sal)             " foreign-keys:"  )
-    (criterium.core/quick-bench (hashrel/relvar (hashrel/rel [:emp_no :salary :from_date :to_date] xrel-sal) #{{:key #{:emp_no, :from_date}}
+    (criterium.core/quick-bench (hashrel/rel [:emp_no :salary :from_date :to_date] xrel-sal))
+    (criterium.core/quick-bench (hashrel/relvar sal_rel #{{:key #{:emp_no, :from_date}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
                                                                                                                       :referenced-key :emp_no}}}) )
 
     (println "\ncreating title with " (count xrel-titles)            " foreign-keys:"  )
-    (criterium.core/quick-bench (hashrel/relvar (hashrel/rel [:emp_no :title :from_date] xrel-titles) #{{:key #{:emp_no, :title, :from_date}}
+    (criterium.core/quick-bench (hashrel/rel [:emp_no :title :from_date] xrel-titles))
+    (criterium.core/quick-bench (hashrel/relvar tit_rel #{{:key #{:emp_no, :title, :from_date}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
                                                                                                                       :referenced-key :emp_no}}}) )
 
     (println "\ncreating dept-mananger with " (count xrel-dept-man)  " foreign-keys:"  )
-    (criterium.core/quick-bench (hashrel/relvar (hashrel/rel [:dept_no :emp_no :from_date] xrel-dept-man) #{{:key #{:emp_no, :dept_no}}
+    (criterium.core/quick-bench (hashrel/rel [:dept_no :emp_no :from_date] xrel-dept-man))
+    (criterium.core/quick-bench (hashrel/relvar dep_man_rel #{{:key #{:emp_no, :dept_no}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
                                                                                                                       :referenced-key :emp_no}}
@@ -139,7 +162,8 @@
                                                                                                                       :referenced-key :dept_no}} }) )
 
     (println "\ncreating dept_employees with " (count xrel-dept-emp)      " foreign-keys:"  )
-    (criterium.core/quick-bench (hashrel/relvar (hashrel/rel [:emp_no :dept_no :from_date] xrel-dept-emp) #{{:key #{:emp_no, :dept_no, :from_date}}
+    (criterium.core/quick-bench (hashrel/rel [:emp_no :dept_no :from_date] xrel-dept-emp))
+    (criterium.core/quick-bench (hashrel/relvar dep_emp_rel #{{:key #{:emp_no, :dept_no, :from_date}}
                                                                                                        {:foreign-key {:key :emp_no,
                                                                                                                       :referenced-relvar emp-relvar,
                                                                                                                       :referenced-key :emp_no}}
@@ -246,10 +270,10 @@
 (defn employee-manipulation
   [database]
   (let [first-employee (first @(:employee database))
-        insert-bm-1 (my-quickbenchmark  (hashrel/insert! (:employee database) {:emp_no (uuid), :birth_date "1958-02-19", :first_name "Saniya", :last_name "Kalloufi", :gender "M", :hire_date "1994-09-15"}) 6)
-        insert-bm-2 (my-quickbenchmark  (hashrel/insert! (:titles database) {:emp_no (:emp_no first-employee), :title (uuid), :from_date "YYYYYYY"}) 6)
-        insert-bm-3 (my-quickbenchmark  (hashrel/insert! (:salaries database) {:emp_no (:emp_no first-employee), :salary 10000000, :from_date (uuid), :to_date "1998-02-08"}) 6)
-        insert-bm-4 (my-quickbenchmark  (hashrel/insert! (:department_employee database) {:emp_no (:emp_no first-employee), :dept_no "d008" :from_date (uuid)}) 6)
+        insert-bm-1 (my-quickbenchmark  (hashrel/insert! (:employee database) {:emp_no (randomID), :birth_date "1958-02-19", :first_name "Saniya", :last_name "Kalloufi", :gender "M", :hire_date "1994-09-15"}) 6)
+        insert-bm-2 (my-quickbenchmark  (hashrel/insert! (:titles database) {:emp_no (:emp_no first-employee), :title (randomID), :from_date "YYYYYYY"}) 6)
+        insert-bm-3 (my-quickbenchmark  (hashrel/insert! (:salaries database) {:emp_no (:emp_no first-employee), :salary 10000000, :from_date (randomID), :to_date "1998-02-08"}) 6)
+        insert-bm-4 (my-quickbenchmark  (hashrel/insert! (:department_employee database) {:emp_no (:emp_no first-employee), :dept_no "d008" :from_date (randomID)}) 6)
 
 
         delete-bm-1 (my-quickbenchmark (hashrel/delete! (:salaries database) (hashrel/relfn [t](> (:salary t) 53383))) 1)
