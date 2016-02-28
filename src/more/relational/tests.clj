@@ -33,8 +33,19 @@
       (when manipulation?
         (more.relational.runtimehashrel/manipilation-test tuple-count)))
 
-    ; (when  (and batrel? employee?)
-    ;  (more.relational.runtimebat/employee-test tuple-count))
+
+    (when  (and batrel? employee?)
+       (when all?
+        (more.relational.runtimebat/employee-test tuple-count))
+      (when creating?
+        (more.relational.runtimebat/creation-test tuple-count))
+      (when search?
+        (more.relational.runtimebat/search-test tuple-count))
+      (when join?
+        (more.relational.runtimebat/join-test tuple-count))
+      (when manipulation?
+        (more.relational.runtimebat/manipilation-test tuple-count)))
+
      (when  (and tr? employee?)
        (when all?
         (more.relational.runtimetr/employee-test tuple-count))
@@ -45,10 +56,9 @@
       (when join?
         (more.relational.runtimetr/join-test tuple-count))
       (when manipulation?
-        (more.relational.runtimehashrel/manipilation-test tuple-count)))
+        (more.relational.runtimetr/manipilation-test tuple-count)))
 
-    (println "gesamtzeit" (/ (double (- (. System (nanoTime)) start)) 1000000000.0))
-    ))
+    (println "gesamtzeit" (/ (double (- (. System (nanoTime)) start)) 1000000000.0))))
 
 
 

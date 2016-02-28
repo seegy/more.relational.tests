@@ -10,4 +10,4 @@
   :main ^:skip-aot more.relational.tests
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}}
-  :jvm-opts ["-Xmx8g"])
+  :jvm-opts ["-Xmx10g"])

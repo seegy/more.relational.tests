@@ -8,3 +8,5 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 *.clj-dump
+/outs*
+hs_err_*.log
