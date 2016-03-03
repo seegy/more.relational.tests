@@ -1,64 +1,7 @@
 (ns more.relational.runtimehashrel
   (:require [more.relational.hashRel :as hashrel])
-  (:use criterium.core))
-
-
-(defn load-raw-data
-  []
-  (let [employees-data (read-string (slurp  "resources/employees.clj-dump" ))
-        salaries-data  (read-string (slurp  "resources/salaries.clj-dump" ))
-        departments-data  (read-string (slurp  "resources/departments.clj-dump" ))
-        titles-data  (read-string (slurp  "resources/titles.clj-dump" ))
-        dept_emp-data  (read-string (slurp  "resources/dept_emp.clj-dump" ))
-        dept_manager-data  (read-string (slurp  "resources/dept_manager.clj-dump" ))]
-
-  {:xrel-emp (sort-by :emp_no  employees-data)
-   :xrel-sal (sort-by :emp_no  salaries-data)
-   :xrel-department departments-data
-   :xrel-titles (sort-by :emp_no  titles-data)
-   :xrel-dept_emp (sort-by :emp_no  dept_emp-data)
-   :xrel-dept_manager (sort-by :emp_no  dept_manager-data)}))
-
-
-(defn- get_emps_by_manager
-  [manxrel empxrel empcount]
-  (let [empno_in_man (into #{} (map #(:emp_no %) manxrel))
-        manager (into #{} (filter #(contains? empno_in_man (:emp_no %)) empxrel))
-        not_manger (clojure.set/difference (set empxrel) manager)
-        ]
-    (apply conj manager (take (- empcount (count manager)) not_manger))))
-
-
-
-(defn- empno_filter
-  [emp_nos xrel]
-   (filterv #(contains? emp_nos (:emp_no %)) xrel))
-
-(defn randomID [] (+ 10000000 (rand-int 100000)))
-
-
-(defmacro my-time
-  "Evaluates expr and prints the time it took.  Returns the value of expr."
-  [expr]
-  `(let [start# (. System (nanoTime))
-         ret# ~expr]
-     [ret# (/ (double (- (. System (nanoTime)) start#)) 1000000.0)]))
-
-
-(defn average
-  [numbers]
-    (/ (apply + numbers) (count numbers)))
-
-(defmacro my-quickbenchmark
-  [expr n]
-  `(let [result-and-runtimes# (mapv (fn[x#](my-time ~expr)) (range ~n))
-         runtimes# (map second result-and-runtimes#)
-         avg# (average runtimes#)
-         closest-under-avg# (apply max (filter #(<= % avg#) runtimes#))
-         closest-upper-avg# (apply min (filter #(>= % avg#) runtimes#))]
-    {:results (map first result-and-runtimes#)
-     :sample-mean [avg# (list closest-under-avg# closest-upper-avg#)]}))
-
+  (:use criterium.core)
+  (:use [more.relational.tools]))
 
 
 
@@ -100,6 +43,109 @@
                                                                                                        {:foreign-key {:key :dept_no,
                                                                                                                       :referenced-relvar dept-relvar,
                                                                                                                       :referenced-key :dept_no}} })]
+    {:employee emp-relvar,
+         :salaries sal-relvar
+         :department dept-relvar
+         :titles title-relvar
+         :department_manager dept-man-relvar
+         :department_employee dept-emp-relvar}))
+
+(defn create-employee-database-onlykey
+  [base-count]
+  (let [raw-data (load-raw-data)
+        employees-max-count (count (:xrel-emp raw-data))
+        employee-count (if (> base-count employees-max-count) employees-max-count base-count)
+        xrel-dept-man (:xrel-dept_manager raw-data)
+        xrel-emp (get_emps_by_manager xrel-dept-man (:xrel-emp raw-data) base-count)
+        emp_nos (into #{} (map #(:emp_no %) xrel-emp))
+        emp-relvar (hashrel/relvar (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp)) {:key :emp_no})
+        dept-relvar (hashrel/relvar (hashrel/rel [:dept_no :dept_name] (:xrel-department raw-data)) {:key :dept_no})
+        xrel-sal (empno_filter emp_nos (:xrel-sal raw-data))
+        xrel-titles (empno_filter emp_nos (:xrel-titles raw-data))
+        xrel-dept-emp (empno_filter emp_nos (:xrel-dept_emp raw-data))
+        sal-relvar (hashrel/relvar (hashrel/rel [:emp_no :salary :from_date :to_date] xrel-sal) #{{:key #{:emp_no, :from_date}}
+                                                                                                       })
+
+        title-relvar  (hashrel/relvar (hashrel/rel [:emp_no :title :from_date] xrel-titles) #{{:key #{:emp_no, :title, :from_date}}
+                                                                                                       })
+
+        dept-man-relvar  (hashrel/relvar (hashrel/rel [:dept_no :emp_no :from_date] xrel-dept-man) #{{:key #{:emp_no, :dept_no}}
+                                                                                                        })
+
+        dept-emp-relvar  (hashrel/relvar (hashrel/rel [:emp_no :dept_no :from_date] xrel-dept-emp) #{{:key #{:emp_no, :dept_no, :from_date}}
+                                                                                                        })]
+    {:employee emp-relvar,
+         :salaries sal-relvar
+         :department dept-relvar
+         :titles title-relvar
+         :department_manager dept-man-relvar
+         :department_employee dept-emp-relvar}))
+
+(defn create-employee-database-onlyfk
+  [base-count]
+  (let [raw-data (load-raw-data)
+        employees-max-count (count (:xrel-emp raw-data))
+        employee-count (if (> base-count employees-max-count) employees-max-count base-count)
+        xrel-dept-man (:xrel-dept_manager raw-data)
+        xrel-emp (get_emps_by_manager xrel-dept-man (:xrel-emp raw-data) base-count)
+        emp_nos (into #{} (map #(:emp_no %) xrel-emp))
+        emp-relvar (hashrel/relvar (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp)))
+        dept-relvar (hashrel/relvar (hashrel/rel [:dept_no :dept_name] (:xrel-department raw-data)))
+        xrel-sal (empno_filter emp_nos (:xrel-sal raw-data))
+        xrel-titles (empno_filter emp_nos (:xrel-titles raw-data))
+        xrel-dept-emp (empno_filter emp_nos (:xrel-dept_emp raw-data))
+        sal-relvar (hashrel/relvar (hashrel/rel [:emp_no :salary :from_date :to_date] xrel-sal) #{
+                                                                                                       {:foreign-key {:key :emp_no,
+                                                                                                                      :referenced-relvar emp-relvar,
+                                                                                                                      :referenced-key :emp_no}}})
+
+        title-relvar  (hashrel/relvar (hashrel/rel [:emp_no :title :from_date] xrel-titles) #{
+                                                                                                       {:foreign-key {:key :emp_no,
+                                                                                                                      :referenced-relvar emp-relvar,
+                                                                                                                      :referenced-key :emp_no}}})
+
+        dept-man-relvar  (hashrel/relvar (hashrel/rel [:dept_no :emp_no :from_date] xrel-dept-man) #{
+                                                                                                       {:foreign-key {:key :emp_no,
+                                                                                                                      :referenced-relvar emp-relvar,
+                                                                                                                      :referenced-key :emp_no}}
+                                                                                                       {:foreign-key {:key :dept_no,
+                                                                                                                      :referenced-relvar dept-relvar,
+                                                                                                                      :referenced-key :dept_no}} })
+
+        dept-emp-relvar  (hashrel/relvar (hashrel/rel [:emp_no :dept_no :from_date] xrel-dept-emp) #{
+                                                                                                       {:foreign-key {:key :emp_no,
+                                                                                                                      :referenced-relvar emp-relvar,
+                                                                                                                      :referenced-key :emp_no}}
+                                                                                                       {:foreign-key {:key :dept_no,
+                                                                                                                      :referenced-relvar dept-relvar,
+                                                                                                                      :referenced-key :dept_no}} })]
+    {:employee emp-relvar,
+         :salaries sal-relvar
+         :department dept-relvar
+         :titles title-relvar
+         :department_manager dept-man-relvar
+         :department_employee dept-emp-relvar}))
+
+(defn create-employee-database-nocons
+  [base-count]
+  (let [raw-data (load-raw-data)
+        employees-max-count (count (:xrel-emp raw-data))
+        employee-count (if (> base-count employees-max-count) employees-max-count base-count)
+        xrel-dept-man (:xrel-dept_manager raw-data)
+        xrel-emp (get_emps_by_manager xrel-dept-man (:xrel-emp raw-data) base-count)
+        emp_nos (into #{} (map #(:emp_no %) xrel-emp))
+        emp-relvar (hashrel/relvar (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take employee-count xrel-emp)))
+        dept-relvar (hashrel/relvar (hashrel/rel [:dept_no :dept_name] (:xrel-department raw-data)))
+        xrel-sal (empno_filter emp_nos (:xrel-sal raw-data))
+        xrel-titles (empno_filter emp_nos (:xrel-titles raw-data))
+        xrel-dept-emp (empno_filter emp_nos (:xrel-dept_emp raw-data))
+        sal-relvar (hashrel/relvar (hashrel/rel [:emp_no :salary :from_date :to_date] xrel-sal) )
+
+        title-relvar  (hashrel/relvar (hashrel/rel [:emp_no :title :from_date] xrel-titles))
+
+        dept-man-relvar  (hashrel/relvar (hashrel/rel [:dept_no :emp_no :from_date] xrel-dept-man) )
+
+        dept-emp-relvar  (hashrel/relvar (hashrel/rel [:emp_no :dept_no :from_date] xrel-dept-emp) )]
     {:employee emp-relvar,
          :salaries sal-relvar
          :department dept-relvar
@@ -197,7 +243,7 @@
     (println "\npointsearch-key-bm-3: ")
     (criterium.core/quick-bench (hashrel/restrict employee #(= (:emp_no %) (:emp_no last-tupel))) )
 
-    (println "\npointsearch-key-bm-3: ")
+    (println "\npointsearch-key-bm-4: ")
     (criterium.core/quick-bench (hashrel/restrict employee #(= (:emp_no %) 1499999)) )
 
 
@@ -210,7 +256,7 @@
     (println "\npointsearch-no-key-bm-3: " )
     (criterium.core/quick-bench (hashrel/restrict employee #(and (= (:birth_date %) (:birth_date last-tupel)) (= (:last_name %) (:last_name last-tupel))(= (:first_name  %) (:first_name  last-tupel)))) )
 
-    (println "\npointsearch-no-key-bm-3: " )
+    (println "\npointsearch-no-key-bm-4: " )
     (criterium.core/quick-bench (hashrel/restrict employee #(and (= (:birth_date %) "XXXXXXX") (= (:last_name %) "YYYYYYYY")(= (:first_name  %) "ZZZZZZ"))) )
 
 
@@ -289,7 +335,7 @@
 
 
         ]
-    (println "\ninsert-bm-1: " (:sample-mean insert-bm-1))
+     #_(  (println "\ninsert-bm-1: " (:sample-mean insert-bm-1))
     (println "\ninsert-bm-2: " (:sample-mean insert-bm-2))
     (println "\ninsert-bm-3: " (:sample-mean insert-bm-3))
     (println "\ninsert-bm-4: " (:sample-mean insert-bm-4))
@@ -303,8 +349,10 @@
     (println "\nupdate-bm-1: " (:sample-mean update-bm-1))
     (println "\nupdate-bm-2: " (:sample-mean update-bm-2))
     (println "\nupdate-bm-3: " (:sample-mean update-bm-3))
-    (println "\nupdate-bm-4: " (:sample-mean update-bm-4))
-    ))
+    (println "\nupdate-bm-4: " (:sample-mean update-bm-4)))
+
+    (mapv #(-> %  :sample-mean first)
+    [insert-bm-1 insert-bm-2 insert-bm-3 insert-bm-4 delete-bm-1 delete-bm-2 delete-bm-3 delete-bm-4 update-bm-1 update-bm-2 update-bm-3 update-bm-4])))
 
 
 
@@ -334,9 +382,52 @@
   (println "\nhashrel - employee - join")
   (employee-join-tests (create-employee-database employee-count)))
 
+
+
+
 (defn manipilation-test
   [employee-count]
-  (println "\nhashrel - employee - manipulation")
-  (employee-manipulation (create-employee-database employee-count)))
+  (let [counter 6]
+
+    (println "\ntr - employee - manipulation - all constraints")
+    (println "#####1 " (mapv #(/ % counter)
+          (apply mapv +
+                 (mapv (fn[x]
+                         (let[database (create-employee-database employee-count)]
+                           (employee-manipulation database)))
+                       (range counter)))))
+
+    (println "\ntr - employee - manipulation - nur keys")
+    (println "#####2 "(mapv #(/ % counter)
+          (apply mapv +
+                 (mapv (fn[x]
+                         (let[database (create-employee-database-onlykey employee-count)
+                              constr (constraints database)]
+                           (map (fn[[k v]] (hashrel/constraint-reset! v (set (filter #(= (ffirst %) :key) (get constr k))))) database)
+                           (employee-manipulation database)))
+                       (range counter)))))
+
+
+    (println "\ntr - employee - manipulation - nur foreign")
+    (println "#####3 "(mapv #(/ % counter)
+          (apply mapv +
+                 (mapv (fn[x]
+                         (let[database (create-employee-database-onlyfk employee-count)
+                              constr (constraints database)]
+                           (map (fn[[k v]] (hashrel/constraint-reset! v (set (filter #(= (ffirst %) :foreign-key) (get constr k))))) database)
+                           (employee-manipulation database)))
+                       (range counter)))))
+
+
+    (println "\ntr - employee - manipulation - keine constraints")
+    (println "#####4 "(mapv #(/ % counter)
+          (apply mapv +
+                 (mapv (fn[x]
+                         (let[database (create-employee-database-nocons employee-count)
+                              constr (constraints database)]
+                           (map (fn[[k v]] (hashrel/constraint-reset! v #{})) database)
+                           (employee-manipulation database)))
+                       (range counter)))))))
+
 
 

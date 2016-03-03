@@ -1,5 +1,5 @@
 #!/bin/bash
-bash -x
+
 COUNTER=5
 until [  $COUNTER -lt 0 ]; do
 
