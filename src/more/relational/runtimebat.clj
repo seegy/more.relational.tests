@@ -600,7 +600,7 @@
 
 (defn manipilation-test
   [employee-count]
-  (let [counter 1]
+  (let [counter 6]
 
     (println "\ntr - employee - manipulation - all constraints")
     (println "#####1 " (mapv #(/ % counter)

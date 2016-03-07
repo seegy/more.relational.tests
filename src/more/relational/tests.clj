@@ -12,7 +12,7 @@
         hashrel? (if (contains? (set args) "hashrel") true false)
         batrel?  (if (contains? (set args) "bat") true false)
         tr?  (if (contains? (set args) "tr") true false)
-        employee? (if (contains? (set args) "employee") true false)
+        employee? (if (contains? (set args) "runtime") true false)
         creating? (if (contains? (set args) "creating") true false)
         search? (if (contains? (set args) "search") true false)
         join? (if (contains? (set args) "join") true false)
@@ -21,6 +21,7 @@
         wait-for-start-signal? (if (contains? (set args) "-s") true false)]
     (when wait-for-start-signal?
       (do (print "Press return to start process...") (flush) (read-line)))
+
     (when (and hashrel? employee?)
       (when all?
         (more.relational.runtimehashrel/employee-test tuple-count))

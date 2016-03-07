@@ -18,6 +18,10 @@
      :xrel-dept_emp (sort-by :emp_no  dept_emp-data)
      :xrel-dept_manager (sort-by :emp_no  dept_manager-data)}))
 
+(defn load-raw-data-employees
+  []
+  (read-string (slurp  "resources/employees.clj-dump" )))
+
 
 (defn get_emps_by_manager
   [manxrel empxrel empcount]
@@ -33,8 +37,16 @@
   [emp_nos xrel]
   (filterv #(contains? emp_nos (:emp_no %)) xrel))
 
-(defn randomID [] (+ 10000000 (rand-int 100000)))
+(defn randomID [] (+ 10000000 (rand-int 10000000)))
 
+
+(defn new-uuid []
+      (str (java.util.UUID/randomUUID)))
+
+
+(defn generate-dump
+  [n]
+  (mapv (fn[x] (new-uuid)) (range n)))
 
 (defmacro my-time
   "Evaluates expr and prints the time it took.  Returns the value of expr."

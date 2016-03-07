@@ -120,17 +120,32 @@
 
 (defn mani-arsch  [file]
   (let [file (slurp file)
-        runs (drop 1 (str/split file #"\S+ - \S+ - manipulation\n"))
+        runs (drop-last 0 (str/split file #"gesamtzeit \d+.\d+\n"))
         result (sequence (comp
-                               (map (fn[s] (apply vector (map #(str/replace  (second %) #"\." ",") (re-seq #"\[(\d+\.+\d*)" s)))))
-                               (map (fn [[a b c d e f g h i j k l m a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2]] (str a "\t" b "\t" c "\t" d "\t" e "\t" f "\t" g "\t" h "\t" i "\t" j "\t" k "\t" l "\t"  m "\t"
-                                                                                                                  a2  "\t" b2  "\t" c2  "\t" d2  "\t" e2  "\t" f2  "\t" g2  "\t" h2  "\t" i2  "\t" j2  "\t" k2  "\t" l2 "\t"  m2)))
+                               (map (fn[s] (read-string (second (first (re-seq #"#####4  (\[.+\])" s))))))
+                               (map (fn [[a b c d e f g h i j k l ]] (str a "\t" b "\t" c "\t" d "\t" e "\t" f "\t" g "\t" h "\t" i "\t" j "\t" k "\t" l)))
                            ) runs)
          ]
     (conj result "insert-bm-1\tinsert-bm-2\tinsert-bm-3\tinsert-bm-4\tdelete-bm-1\tdelete-bm-2\tdelete-bm-3\tdelete-bm-4\tupdate-bm-1\tupdate-bm-2\tupdate-bm-3\tupdate-bm-4" )))
 
 
-(def filepath "/home/seegy/git/more.relational.tests/outs-2016-03-01-14:19:36/bat-manipulation.out")
+
+(def filepath "/home/seegy/git/more.relational.tests/outs-2016-03-03-13:23:42/tr-manipulation.out")
+
+
+(map println (mani-arsch filepath))
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
