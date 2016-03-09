@@ -1,8 +1,8 @@
-(ns more.relational.memorybat
-   (:require [more.relational.bat :as batrel])
+(ns more.relational.memorytr
+   (:require [more.relational.transrelational :as trel])
   (:use [criterium.core :as crit])
   (:use [more.relational.tools])
-  (:use [more.relational.runtimebat]))
+  (:use [more.relational.runtimetr]))
 
 
 
@@ -11,7 +11,7 @@
 
 
 
-(defn lulu
+#_(defn lulu
   [steps max-t]
   (let [relvar  (batrel/batvar (batrel/convertToBats [:emp_no :birth_date :first_name :last_name :gender :hire_date] #{})) ]
   (loop [tuples (take max-t employees)
@@ -39,10 +39,7 @@
            100000
            200000
            300000]]
-  (batrel/save-batvar (batrel/batvar (batrel/convertToBats [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take c employees))) (str "resources/bat-" c ".db"))))
-
-;(create-employee-files)
-
+  (trel/save-transvar (trel/transvar (trel/tr [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take c employees))) (str "resources/tr-" c ".db"))))
 
 
 (defn create-db-files []
@@ -55,8 +52,7 @@
              300024]]
     (let[db (create-employee-database-nocons c)
          tupel-count (apply + (map (fn[[_ v]] (count @v)) db))]
-    (batrel/save-db db (str "resources/bat-db-" tupel-count ".db")))))
-
+    (trel/save-db db (str "resources/tr-db-" tupel-count ".db")))))
 
 (defn create-db-for-testing-files []
   (doseq [c [1000
@@ -68,7 +64,8 @@
              30000 ]]
     (let[db (create-employee-database-nocons c)
          tupel-count (apply + (map (fn[[_ v]] (count @v)) db))]
-    (batrel/save-db db (str "resources/bat-testing-db-" c ".db")))))
+    (trel/save-db db (str "resources/tr-testing-db-" c ".db")))))
 
-;(create-db-files)
+
+
 ;(create-db-for-testing-files)

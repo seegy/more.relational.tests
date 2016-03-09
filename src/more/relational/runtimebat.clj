@@ -235,6 +235,13 @@
                                                              {:foreign-key {:key :dept_no,
                                                                             :referenced-relvar dept-relvar,
                                                                             :referenced-key :dept_no}} }) )))
+(defn employee-load-test
+  [base-count]
+  (criterium.core/quick-bench (batrel/load-db (str "resources/bat-testing-db-" base-count ".db"))))
+
+
+#_(doseq [c [1000 2500 5000 10000 15000 20000 30000 ]]
+  (employee-load-test c))
 
 
 (defn employee-operation-tests
