@@ -6,8 +6,6 @@
 
 
 
-(def employees (load-raw-data-employees))
-
 
 
 
@@ -39,7 +37,7 @@
            100000
            200000
            300000]]
-  (trel/save-transvar (trel/transvar (trel/tr [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take c employees))) (str "resources/tr-" c ".db"))))
+  (trel/save-transvar (trel/transvar (trel/tr [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take c (load-raw-data-employees)))) (str "resources/tr-" c ".db"))))
 
 
 (defn create-db-files []

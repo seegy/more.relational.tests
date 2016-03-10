@@ -100,3 +100,9 @@
                             {:foreign-key {:key :dept_no,
                                            :referenced-relvar dept-relvar,
                                            :referenced-key :dept_no}} }}))
+
+
+(defn create-employee-dummies
+  []
+  {:emp_no (randomID) :birth_date (new-uuid) :first_name (new-uuid) :last_name (new-uuid) :gender "F" :hire_date (new-uuid)})
+

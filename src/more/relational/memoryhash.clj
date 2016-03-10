@@ -6,31 +6,6 @@
 
 
 
-(def employees (load-raw-data-employees))
-
-
-
-
-#_(defn lulu
-  [steps max-t]
-  (let [relvar  (batrel/batvar (batrel/convertToBats [:emp_no :birth_date :first_name :last_name :gender :hire_date] #{})) ]
-  (loop [tuples (take max-t employees)
-         result []]
-    (if (empty? tuples)
-      (do
-        [ relvar result])
-      (do
-        (doseq [t (take steps tuples)] (batrel/insert! relvar t))
-        (crit/force-gc)
-        (recur (drop steps tuples) (conj result (crit/heap-used))))))))
-
-
-
-;  (lulu 100 10000)
-
-
-
-
 (defn create-employee-files []
   (doseq [c [1000
            5000
@@ -39,7 +14,7 @@
            100000
            200000
            300000]]
-  (hashrel/save-relvar (hashrel/relvar (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take c employees))) (str "resources/hashrel-" c ".db"))))
+  (hashrel/save-relvar (hashrel/relvar (hashrel/rel [:emp_no :birth_date :first_name :last_name :gender :hire_date] (take c (load-raw-data-employees)))) (str "resources/hashrel-" c ".db"))))
 
 
 
@@ -67,5 +42,21 @@
          tupel-count (apply + (map (fn[[_ v]] (count @v)) db))]
     (hashrel/save-db db (str "resources/hashrel-testing-db-" c ".db")))))
 
+;(create-db-files )
 
-(create-db-for-testing-files)
+(defn insert-mem-test
+  []
+  (let [db (hashrel/load-db "resources/hashrel-db-3919015.db")
+        rvar (:employee db)
+        duplicates (take 100 (load-raw-data-employees))
+        news (mapv (fn[n] (create-employee-dummies)) (range 100))]
+    (Thread/sleep 5000)
+    (hashrel/insert! rvar duplicates)
+    (Thread/sleep 5000)
+    (hashrel/insert! rvar news)))
+
+
+
+
+
+

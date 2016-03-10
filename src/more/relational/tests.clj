@@ -1,7 +1,8 @@
 (ns more.relational.tests
   (:require [more.relational.runtimehashrel]
             [more.relational.runtimetr]
-            [more.relational.runtimebat])
+            [more.relational.runtimebat]
+            [more.relational.memoryhash])
   (:gen-class))
 
 (defn -main
@@ -18,7 +19,8 @@
         join? (if (contains? (set args) "join") true false)
         manipulation? (if (contains? (set args) "manipulation") true false)
         tuple-count (if (contains? (set args) "-c") (read-string (nth args (inc (.indexOf args "-c")))) 1000)
-        wait-for-start-signal? (if (contains? (set args) "-s") true false)]
+        wait-for-start-signal? (if (contains? (set args) "-s") true false)
+        mem? (if (contains? (set args) "mem") true false)]
     (when wait-for-start-signal?
       (do (print "Press return to start process...") (flush) (read-line)))
 
@@ -58,6 +60,11 @@
         (more.relational.runtimetr/join-test tuple-count))
       (when manipulation?
         (more.relational.runtimetr/manipilation-test tuple-count)))
+
+    (when (and hashrel? mem?)
+      (when creating?
+        (more.relational.memoryhash/insert-mem-test)))
+
 
     (println "gesamtzeit" (/ (double (- (. System (nanoTime)) start)) 1000000000.0))))
 
