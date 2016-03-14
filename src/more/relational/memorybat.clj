@@ -6,31 +6,6 @@
 
 
 
-;(def employees (load-raw-data-employees))
-
-
-
-
-(defn lulu
-  [steps max-t]
-  (let [relvar  (batrel/batvar (batrel/convertToBats [:emp_no :birth_date :first_name :last_name :gender :hire_date] #{})) ]
-  (loop [tuples (take max-t employees)
-         result []]
-    (if (empty? tuples)
-      (do
-        [ relvar result])
-      (do
-        (doseq [t (take steps tuples)] (batrel/insert! relvar t))
-        (crit/force-gc)
-        (recur (drop steps tuples) (conj result (crit/heap-used))))))))
-
-
-
-;  (lulu 100 10000)
-
-
-
-
 (defn create-employee-files []
   (doseq [c [1000
            5000
@@ -70,5 +45,68 @@
          tupel-count (apply + (map (fn[[_ v]] (count @v)) db))]
     (batrel/save-db db (str "resources/bat-testing-db-" c ".db")))))
 
-;(create-db-files)
-;(create-db-for-testing-files)
+
+
+(defn insert-mem-test-dup
+  []
+  (let [db (batrel/load-db "resources/bat-db-3919015.db")
+        rvar (:employee db)
+        duplicates (take 100 (load-raw-data-employees))]
+    (doseq [t duplicates] (batrel/insert! rvar t))))
+
+
+
+(defn insert-mem-test-new
+  []
+  (let [db (batrel/load-db "resources/bat-db-3919015.db")
+        rvar (:employee db)
+        news (mapv (fn[n] (create-employee-dummies)) (range 100))]
+    (doseq [t news](batrel/insert! rvar t))))
+
+
+
+
+(defn delete-mem-test-ps
+  []
+  (let [db (batrel/load-db "resources/bat-db-3919015.db")
+        rvar (:employee db)
+        ids-to-delete [44948 33758 18936 12585]]
+    (doseq [id ids-to-delete]
+      (let[ result (batrel/select (:emp_no  @rvar) = id)
+            tuples (batrel/makeTable [] (keys @rvar) (vals (assoc @rvar :emp_no (batrel/join (batrel/mirror result) (:emp_no  @rvar) =))))]
+        (doseq [t tuples] (batrel/delete! rvar t))))))
+
+
+
+
+(defn delete-mem-test-as
+  []
+  (let [db (batrel/load-db "resources/bat-db-3919015.db")
+        rvar (:employee db)]
+    (let[ result (batrel/select (:gender  @rvar) not= "F")]
+      (batrel/assign! rvar (assoc @rvar :gender (batrel/join (batrel/mirror result) (:gender  @rvar) =))))))
+
+
+
+
+(defn search-mem-test-ps
+  []
+  (let [db (batrel/load-db "resources/bat-db-3919015.db")
+        rvar (:employee db)
+        ids-to-delete [44948 33758 18936 12585]]
+    (doseq [id ids-to-delete]
+      (let[ result (batrel/select (:emp_no  @rvar) = id)]
+        (batrel/makeTable [] (keys @rvar) (vals (assoc @rvar :emp_no (batrel/join (batrel/mirror result) (:emp_no  @rvar) =))))))))
+
+
+(defn search-mem-test-as
+  []
+  (let [db (batrel/load-db "resources/bat-db-3919015.db")
+        rvar (:employee db)]
+    (let[ result (batrel/select (:gender  @rvar) not= "F")]
+      (batrel/makeTable [] (keys @rvar) (vals (assoc @rvar :gender (batrel/join (batrel/mirror result) (:gender  @rvar) =)))))))
+
+
+
+
+

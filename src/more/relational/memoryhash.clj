@@ -44,16 +44,56 @@
 
 ;(create-db-files )
 
-(defn insert-mem-test
+(defn insert-mem-test-dup
   []
   (let [db (hashrel/load-db "resources/hashrel-db-3919015.db")
         rvar (:employee db)
-        duplicates (take 100 (load-raw-data-employees))
+        duplicates (take 100 (load-raw-data-employees))]
+    (hashrel/insert! rvar duplicates)))
+
+(defn insert-mem-test-new
+  []
+  (let [db (hashrel/load-db "resources/hashrel-db-3919015.db")
+        rvar (:employee db)
         news (mapv (fn[n] (create-employee-dummies)) (range 100))]
-    (Thread/sleep 5000)
-    (hashrel/insert! rvar duplicates)
-    (Thread/sleep 5000)
     (hashrel/insert! rvar news)))
+
+
+
+(defn delete-mem-test-ps
+  []
+  (let [db (hashrel/load-db "resources/hashrel-db-3919015.db")
+        rvar (:employee db)
+        ids-to-delete [44948 33758 18936 12585]]
+    (doseq [id ids-to-delete] (hashrel/delete! rvar (hashrel/relfn [t] (= (:emp_no t) id))))))
+
+
+
+(defn delete-mem-test-as
+  []
+  (let [db (hashrel/load-db "resources/hashrel-db-3919015.db")
+        rvar (:employee db)]
+    (hashrel/delete! rvar (hashrel/relfn [t] (= (:gender t) "F")))))
+
+
+
+
+(defn search-mem-test-ps
+  []
+  (let [db (hashrel/load-db "resources/hashrel-db-3919015.db")
+        rvar (:employee db)
+        ids-to-delete [44948 33758 18936 12585]]
+    (doseq [id ids-to-delete] (hashrel/restrict @rvar #(= (:emp_no %) id)))))
+
+
+(defn search-mem-test-as
+  []
+  (let [db (hashrel/load-db "resources/hashrel-db-3919015.db")
+        rvar (:employee db)]
+    (hashrel/restrict @rvar (hashrel/relfn [t] (= (:gender t) "F")))))
+
+
+
 
 
 
