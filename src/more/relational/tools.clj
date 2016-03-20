@@ -23,6 +23,10 @@
   (read-string (slurp  "resources/employees.clj-dump" )))
 
 
+(defn load-raw-data-salaries
+  []
+  (read-string (slurp  "resources/salaries.clj-dump" )))
+
 (defn get_emps_by_manager
   [manxrel empxrel empcount]
   (let [empno_in_man (into #{} (map #(:emp_no %) manxrel))

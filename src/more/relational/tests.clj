@@ -27,7 +27,11 @@
         ps? (if (contains? (set args) "ps") true false)
         as? (if (contains? (set args) "as") true false)
         new? (if (contains? (set args) "new") true false)
-        dup? (if (contains? (set args) "dup") true false)]
+        dup? (if (contains? (set args) "dup") true false)
+        se? (if (contains? (set args) "se") true false)
+        es? (if (contains? (set args) "es") true false) ]
+
+
     (when wait-for-start-signal?
       (do (print "Press return to start process...") (flush) (read-line)))
 
@@ -85,7 +89,13 @@
         (when ps?
           (more.relational.memoryhash/search-mem-test-ps))
         (when as?
-          (more.relational.memoryhash/search-mem-test-as))))
+          (more.relational.memoryhash/search-mem-test-as)))
+
+      (when join?
+        (when es?
+          (more.relational.memoryhash/join-mem-test-es))
+        (when se?
+          (more.relational.memoryhash/join-mem-test-se))))
 
     (when (and batrel? mem?)
       (when creating?
@@ -104,7 +114,13 @@
         (when ps?
           (more.relational.memorybat/search-mem-test-ps))
         (when as?
-          (more.relational.memorybat/search-mem-test-as))))
+          (more.relational.memorybat/search-mem-test-as)))
+
+      (when join?
+        (when es?
+          (more.relational.memorybat/join-mem-test-es))
+        (when se?
+          (more.relational.memorybat/join-mem-test-se))))
 
     (when (and tr? mem?)
       (when creating?
@@ -123,10 +139,17 @@
         (when ps?
           (more.relational.memorytr/search-mem-test-ps))
         (when as?
-          (more.relational.memorytr/search-mem-test-as))))
+          (more.relational.memorytr/search-mem-test-as)))
+
+      (when join?
+        (when es?
+          (more.relational.memorytr/join-mem-test-es))
+        (when se?
+          (more.relational.memorytr/join-mem-test-se))))
 
 
-    (println "gesamtzeit" (/ (double (- (. System (nanoTime)) start)) 1000000000.0))))
+    (println "gesamtzeit" (/ (double (- (. System (nanoTime)) start)) 1000000000.0))
+    (Thread/sleep 5000)))
 
 
 

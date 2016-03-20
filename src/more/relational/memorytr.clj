@@ -47,49 +47,64 @@
 
 (defn insert-mem-test-dup
   []
-  (let [db (trel/load-db "resources/tr-db-3919015.db")
-        rvar (:employee db)
+  (let [rvar (trel/load-transvar "resources/tr-300024.db")
         duplicates (take 100 (load-raw-data-employees))]
+    (println "starting")
     (trel/insert! rvar duplicates)))
 
 
 (defn insert-mem-test-new
   []
-  (let [db (trel/load-db "resources/tr-db-3919015.db")
-        rvar (:employee db)
+  (let [rvar (trel/load-transvar "resources/tr-300024.db")
         news (mapv (fn[n] (create-employee-dummies)) (range 100))]
+    (println "starting")
     (trel/insert! rvar news)))
 
 
 (defn delete-mem-test-ps
   []
-  (let [db (trel/load-db "resources/tr-db-3919015.db")
-        rvar (:employee db)
+  (let [rvar (trel/load-transvar "resources/tr-300024.db")
         ids-to-delete [44948 33758 18936 12585]]
+    (println "starting")
     (doseq [id ids-to-delete] (trel/delete! rvar (trel/tr-fn [t] (= (:emp_no t) id))))))
 
 
 
 (defn delete-mem-test-as
   []
-  (let [db (trel/load-db "resources/tr-db-3919015.db")
-        rvar (:employee db)]
+  (let [rvar (trel/load-transvar "resources/tr-300024.db")]
+    (println "starting")
     (trel/delete! rvar (trel/tr-fn [t] (= (:gender t) "F")))))
 
 
 (defn search-mem-test-ps
   []
-  (let [db (trel/load-db "resources/tr-db-3919015.db")
-        rvar (:employee db)
+  (let [rvar (trel/load-transvar "resources/tr-300024.db")
         ids-to-delete [44948 33758 18936 12585]]
+    (println "starting")
     (doseq [id ids-to-delete] (trel/restriction @rvar (trel/tr-fn [t] (= (:emp_no t) id))))))
 
 
 
 (defn search-mem-test-as
   []
-  (let [db (trel/load-db "resources/tr-db-3919015.db")
-        rvar (:employee db)]
+  (let [rvar (trel/load-transvar "resources/tr-300024.db")]
+    (println "starting")
     (trel/restriction @rvar (trel/tr-fn [t] (= (:gender t) "F")))))
 
+
+(defn join-mem-test-es
+  []
+  (let [emp_rvar (trel/load-transvar "resources/tr-300024.db")
+        sal_rvar (trel/load-transvar "resources/tr-salaries.db")]
+    (println "starting")
+    (trel/join @emp_rvar @sal_rvar)))
+
+
+(defn join-mem-test-se
+  []
+  (let [emp_rvar (trel/load-transvar "resources/tr-300024.db")
+        sal_rvar (trel/load-transvar "resources/tr-salaries.db")]
+    (println "starting")
+    (trel/join @sal_rvar @emp_rvar)))
 

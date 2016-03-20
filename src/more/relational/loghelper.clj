@@ -29,13 +29,7 @@
 
 
 (def filepath "/home/seegy/git/more.relational.tests/outs-2016-03-01-14:19:36/bat-create.out")
-(map println (create-Parser filepath ))
-;(map println (create-Parser filepath  "employees"))
-;(map println  (create-Parser filepath  "department"))
-;(map println (create-Parser filepath  "salaris"))
-;(map println (create-Parser filepath  "title"))
-;(map println (create-Parser filepath  "dept-mananger"))
-;(map println (create-Parser filepath  "dept_employees"))
+
 
 (defn FICKDICH
   [file]
@@ -68,11 +62,6 @@
 
 
 
-(def filepath "/home/seegy/git/more.relational.tests/outs-2016-02-29-09:07:56/bat-search.out")
-
-(map println (bat-arsch filepath))
-
-
 
 
 
@@ -92,9 +81,6 @@
     (conj result "pointsearch-key-bm-1\tpointsearch-key-bm-2\tpointsearch-key-bm-3\tpointsearch-key-bm-4\tpointsearch-no-key-bm-1\tpointsearch-no-key-bm-2\tpointsearch-no-key-bm-3\tpointsearch-no-key-bm-4\tareasearch-bm-1\tareasearch-bm-2\tareasearch-bm-3\tareasearch-bm-4\tareasearch-bm-5\tpointsearch-key-bm-1\tpointsearch-key-bm-2\tpointsearch-key-bm-3\tpointsearch-key-bm-4\tpointsearch-no-key-bm-1\tpointsearch-no-key-bm-2\tpointsearch-no-key-bm-3\tpointsearch-no-key-bm-4\tareasearch-bm-1\tareasearch-bm-2\tareasearch-bm-3\tareasearch-bm-4\tareasearch-bm-5" )))
 
 
-(def filepath "/home/seegy/git/more.relational.tests/outs-2016-03-02-21:25:35/tr-search.out")
-
-(map println (tr-arsch filepath))
 
 
 
@@ -111,8 +97,6 @@
     (conj result "join-bm-1\tjoin-bm-2\tjoin-bm-3\tjoin-bm-4\tjoin-bm-5\tjoin-bm-6\tjoin-bm-1\tjoin-bm-2\tjoin-bm-3\tjoin-bm-4\tjoin-bm-5\tjoin-bm-6" )))
 
 
-(def filepath "/home/seegy/git/more.relational.tests/outs-2016-03-02-21:57:42/tr-search.out")
-(map println (joinparser filepath))
 
 
 
@@ -127,13 +111,6 @@
                            ) runs)
          ]
     (conj result "insert-bm-1\tinsert-bm-2\tinsert-bm-3\tinsert-bm-4\tdelete-bm-1\tdelete-bm-2\tdelete-bm-3\tdelete-bm-4\tupdate-bm-1\tupdate-bm-2\tupdate-bm-3\tupdate-bm-4" )))
-
-
-
-(def filepath "/home/seegy/git/more.relational.tests/outs-2016-03-03-13:23:42/tr-manipulation.out")
-
-
-(map println (mani-arsch filepath))
 
 
 
